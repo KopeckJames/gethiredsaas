@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { Configuration, OpenAIApi } from "openai";
-import { getSession } from "@/lib/auth";
+import { getUser } from "@/lib/auth";
 import { checkSubscription } from "@/lib/subscription";
 import { incrementApiLimit, checkApiLimit } from "@/lib/api-limit";
 
@@ -16,11 +16,11 @@ export async function POST(
   req: Request
 ) {
   try {
-    const session = await getSession();
+    const user = await getUser();
     const body = await req.json();
     const { messages  } = body;
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 

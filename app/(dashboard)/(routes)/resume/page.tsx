@@ -70,8 +70,13 @@ const ResumePage = () => {
     } catch (error: any) {
       if (error?.response?.status === 403) {
         proModal.onOpen();
+      } else if (error?.response?.status === 429) {
+        toast.error("Our AI system is experiencing high demand. Please try again in a few moments.");
+      } else if (error?.response?.data) {
+        // Use the error message from the server if available
+        toast.error(error.response.data);
       } else {
-        toast.error("Something went wrong.");
+        toast.error("Failed to analyze resume. Please try again.");
       }
     } finally {
       router.refresh();
@@ -80,8 +85,18 @@ const ResumePage = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
-      form.setValue('resume', e.target.files[0]);
+      const file = e.target.files[0];
+      const allowedTypes = ['.txt', '.doc', '.docx'];
+      const fileExtension = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
+      
+      if (!allowedTypes.includes(fileExtension)) {
+        toast.error("Please upload a .txt, .doc, or .docx file only");
+        e.target.value = ''; // Reset file input
+        return;
+      }
+
+      setSelectedFile(file);
+      form.setValue('resume', file);
     }
   };
 
@@ -89,7 +104,7 @@ const ResumePage = () => {
     <div>
       <Heading
         title="ATS Resume Analysis"
-        description="Upload your resume and job description to get ATS optimization suggestions."
+        description="Upload your resume (.txt, .doc, or .docx files only) and job description to get ATS optimization suggestions."
         icon={FileText}
         iconColor="text-blue-700"
         bgColor="bg-blue-700/10"
@@ -119,7 +134,7 @@ const ResumePage = () => {
               <div className="col-span-12 lg:col-span-10">
                 <Input
                   type="file"
-                  accept=".pdf,.doc,.docx"
+                  accept=".txt,.doc,.docx"
                   onChange={handleFileChange}
                   disabled={isLoading}
                 />
