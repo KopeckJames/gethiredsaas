@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Montserrat } from 'next/font/google'
-import { Code, ImageIcon, LayoutDashboard, MessageSquare, Music, Settings, VideoIcon } from "lucide-react";
+import { Code, ImageIcon, LayoutDashboard, MessageSquare, Music, Settings, VideoIcon, FileText } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
@@ -17,6 +17,12 @@ const routes = [
     icon: LayoutDashboard,
     href: '/dashboard',
     color: "text-sky-500"
+  },
+  {
+    label: 'ATS Resume Analysis',
+    icon: FileText,
+    href: '/resume',
+    color: "text-blue-700",
   },
   {
     label: 'Conversation',

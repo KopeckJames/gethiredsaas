@@ -2,7 +2,7 @@
 
 import * as z from "zod";
 import axios from "axios";
-import { FileText, Upload } from "lucide-react";
+import { FileText } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
@@ -19,7 +19,14 @@ import { Empty } from "@/components/ui/empty";
 import { useProModal } from "@/hooks/use-pro-modal";
 import { Card } from "@/components/ui/card";
 
-import { formSchema } from "./constants";
+const formSchema = z.object({
+  jobDescription: z.string().min(1, {
+    message: "Job description is required."
+  }),
+  resume: z.instanceof(File, {
+    message: "Resume file is required."
+  })
+});
 
 interface AnalysisResult {
   score: number;
@@ -27,7 +34,7 @@ interface AnalysisResult {
   optimizedContent?: string;
 }
 
-const CodePage = () => {
+const ResumePage = () => {
   const router = useRouter();
   const proModal = useProModal();
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -186,4 +193,4 @@ const CodePage = () => {
    );
 }
  
-export default CodePage;
+export default ResumePage;

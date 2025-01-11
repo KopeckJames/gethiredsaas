@@ -44,6 +44,7 @@ export async function GET() {
       success_url: settingsUrl,
       cancel_url: settingsUrl,
       payment_method_types: ["card"],
+      allow_promotion_codes: true,
       mode: "subscription",
       billing_address_collection: "auto",
       customer_email: userEmail,
@@ -53,7 +54,7 @@ export async function GET() {
             currency: "USD",
             product_data: {
               name: "Genius Pro",
-              description: "Unlimited AI Generations"
+              description: "Unlimited AI Generations including ATS Resume Analysis"
             },
             unit_amount: 2000,
             recurring: {

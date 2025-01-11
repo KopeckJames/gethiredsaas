@@ -12,13 +12,51 @@ const configuration = new Configuration({
 
 const openai = new OpenAIApi(configuration);
 
-export async function POST(
-  req: Request
-) {
+const analyzeResume = async (resumeText: string, jobDescription: string) => {
+  const prompt = `
+    You are an expert ATS (Applicant Tracking System) analyzer. Analyze the following resume against the provided job description.
+    
+    Job Description:
+    ${jobDescription}
+    
+    Resume:
+    ${resumeText}
+    
+    Please provide:
+    1. A score from 0-100 indicating how well the resume matches the job requirements
+    2. A list of specific recommendations to improve the resume's ATS compatibility
+    3. An optimized version of the resume content that would score better in ATS systems
+    
+    Format your response as a JSON object with the following structure:
+    {
+      "score": number,
+      "recommendations": string[],
+      "optimizedContent": string
+    }
+  `;
+
+  const response = await openai.createChatCompletion({
+    model: "gpt-4",
+    messages: [
+      {
+        role: "system",
+        content: "You are an expert ATS system analyzer that helps optimize resumes."
+      },
+      {
+        role: "user",
+        content: prompt
+      }
+    ],
+    temperature: 0.7,
+  });
+
+  const content = response.data.choices[0].message?.content || "";
+  return JSON.parse(content);
+};
+
+export async function POST(req: Request) {
   try {
     const session = await getSession();
-    const body = await req.json();
-    const { prompt, amount = 1, resolution = "512x512" } = body;
 
     if (!session?.user?.id) {
       return new NextResponse("Unauthorized", { status: 401 });
@@ -28,16 +66,16 @@ export async function POST(
       return new NextResponse("OpenAI API Key not configured.", { status: 500 });
     }
 
-    if (!prompt) {
-      return new NextResponse("Prompt is required", { status: 400 });
+    const formData = await req.formData();
+    const resume = formData.get("resume") as File;
+    const jobDescription = formData.get("jobDescription") as string;
+
+    if (!resume) {
+      return new NextResponse("Resume file is required", { status: 400 });
     }
 
-    if (!amount) {
-      return new NextResponse("Amount is required", { status: 400 });
-    }
-
-    if (!resolution) {
-      return new NextResponse("Resolution is required", { status: 400 });
+    if (!jobDescription) {
+      return new NextResponse("Job description is required", { status: 400 });
     }
 
     const freeTrial = await checkApiLimit();
@@ -47,19 +85,24 @@ export async function POST(
       return new NextResponse("Free trial has expired. Please upgrade to pro.", { status: 403 });
     }
 
-    const response = await openai.createImage({
-      prompt,
-      n: parseInt(amount, 10),
-      size: resolution,
-    });
+    // Read the resume file content
+    const resumeText = await resume.text();
+    
+    try {
+      // Analyze the resume
+      const analysis = await analyzeResume(resumeText, jobDescription);
 
-    if (!isPro) {
-      await incrementApiLimit();
+      if (!isPro) {
+        await incrementApiLimit();
+      }
+
+      return NextResponse.json(analysis);
+    } catch (error) {
+      console.error('[ANALYSIS_ERROR]', error);
+      return new NextResponse("Failed to analyze resume. Please try again.", { status: 500 });
     }
-
-    return NextResponse.json(response.data.data);
   } catch (error) {
-    console.log('[IMAGE_ERROR]', error);
+    console.log('[ANALYSIS_ERROR]', error);
     return new NextResponse("Internal Error", { status: 500 });
   }
-};
+}
