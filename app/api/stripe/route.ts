@@ -1,34 +1,43 @@
-import { auth, currentUser } from "@clerk/nextjs";
 import { NextResponse } from "next/server";
-
-import prismadb from "@/lib/prismadb";
+import { getSession } from "@/lib/auth";
+import { createClient } from "@/lib/supabase";
 import { stripe } from "@/lib/stripe";
 import { absoluteUrl } from "@/lib/utils";
+
+// Mark route as dynamic to allow cookie usage
+export const dynamic = 'force-dynamic';
 
 const settingsUrl = absoluteUrl("/settings");
 
 export async function GET() {
   try {
-    const { userId } = auth();
-    const user = await currentUser();
-
-    if (!userId || !user) {
+    const session = await getSession();
+    const supabase = createClient();
+    
+    if (!session?.user) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const userSubscription = await prismadb.userSubscription.findUnique({
-      where: {
-        userId
-      }
-    })
+    const userId = session.user.id;
+    const userEmail = session.user.email;
 
-    if (userSubscription && userSubscription.stripeCustomerId) {
+    if (!userId || !userEmail) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const { data: subscription } = await supabase
+      .from('user_subscriptions')
+      .select('stripe_customer_id')
+      .eq('user_id', userId)
+      .single();
+
+    if (subscription?.stripe_customer_id) {
       const stripeSession = await stripe.billingPortal.sessions.create({
-        customer: userSubscription.stripeCustomerId,
+        customer: subscription.stripe_customer_id,
         return_url: settingsUrl,
-      })
+      });
 
-      return new NextResponse(JSON.stringify({ url: stripeSession.url }))
+      return new NextResponse(JSON.stringify({ url: stripeSession.url }));
     }
 
     const stripeSession = await stripe.checkout.sessions.create({
@@ -37,7 +46,7 @@ export async function GET() {
       payment_method_types: ["card"],
       mode: "subscription",
       billing_address_collection: "auto",
-      customer_email: user.emailAddresses[0].emailAddress,
+      customer_email: userEmail,
       line_items: [
         {
           price_data: {

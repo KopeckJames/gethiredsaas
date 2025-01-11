@@ -1,35 +1,54 @@
-import { auth } from "@clerk/nextjs";
+import { createClient } from '@/lib/supabase';
 
-import prismadb from "@/lib/prismadb";
+export async function checkSubscription() {
+  try {
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
 
-const DAY_IN_MS = 86_400_000;
+    if (!session?.user?.id) {
+      return false;
+    }
 
-export const checkSubscription = async () => {
-  const { userId } = auth();
+    const { data: subscription, error } = await supabase
+      .from('user_subscriptions')
+      .select('stripe_price_id, stripe_current_period_end')
+      .eq('user_id', session.user.id)
+      .single();
 
-  if (!userId) {
+    if (error || !subscription) {
+      return false;
+    }
+
+    return subscription.stripe_price_id && new Date(subscription.stripe_current_period_end) > new Date();
+  } catch (error) {
+    console.error('Error checking subscription:', error);
     return false;
   }
+}
 
-  const userSubscription = await prismadb.userSubscription.findUnique({
-    where: {
-      userId: userId,
-    },
-    select: {
-      stripeSubscriptionId: true,
-      stripeCurrentPeriodEnd: true,
-      stripeCustomerId: true,
-      stripePriceId: true,
-    },
-  })
+export async function getUserSubscription() {
+  try {
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
 
-  if (!userSubscription) {
-    return false;
+    if (!session?.user?.id) {
+      return null;
+    }
+
+    const { data: subscription, error } = await supabase
+      .from('user_subscriptions')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching subscription:', error);
+      return null;
+    }
+
+    return subscription;
+  } catch (error) {
+    console.error('Error fetching subscription:', error);
+    return null;
   }
-
-  const isValid =
-    userSubscription.stripePriceId &&
-    userSubscription.stripeCurrentPeriodEnd?.getTime()! + DAY_IN_MS > Date.now()
-
-  return !!isValid;
-};
+}

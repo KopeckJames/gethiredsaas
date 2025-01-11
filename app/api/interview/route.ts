@@ -1,8 +1,8 @@
 import Replicate from "replicate";
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { incrementApiLimit, checkApiLimit } from "@/lib/api-limit";
 import { checkSubscription } from "@/lib/subscription";
+import { incrementApiLimit, checkApiLimit } from "@/lib/api-limit";
 
 export const dynamic = 'force-dynamic';
 
@@ -34,10 +34,10 @@ export async function POST(
     }
 
     const response = await replicate.run(
-      "anotherjesse/zeroscope-v2-xl:71996d331e8ede8ef7bd76eba9fae076d31792e4ddf4ad057779b443d6aea62f",
+      "riffusion/riffusion:8cf61ea6c56afd61d8f5b9ffd14d7c216c0a93844ce2d82ac1c9ecc9c7f24e05",
       {
         input: {
-          prompt,
+          prompt_a: prompt
         }
       }
     );
@@ -48,7 +48,7 @@ export async function POST(
 
     return NextResponse.json(response);
   } catch (error) {
-    console.log('[VIDEO_ERROR]', error);
+    console.log('[MUSIC_ERROR]', error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 };
