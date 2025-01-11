@@ -2,7 +2,7 @@
 
 import * as z from "zod";
 import axios from "axios";
-import { FileText, Upload } from "lucide-react";
+import { FileText } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
@@ -19,7 +19,14 @@ import { Empty } from "@/components/ui/empty";
 import { useProModal } from "@/hooks/use-pro-modal";
 import { Card } from "@/components/ui/card";
 
-import { formSchema } from "./constants";
+const formSchema = z.object({
+  jobDescription: z.string().min(1, {
+    message: "Job description is required."
+  }),
+  resume: z.instanceof(File, {
+    message: "Resume file is required."
+  })
+});
 
 interface AnalysisResult {
   score: number;
@@ -27,7 +34,7 @@ interface AnalysisResult {
   optimizedContent?: string;
 }
 
-const CodePage = () => {
+const ResumePage = () => {
   const router = useRouter();
   const proModal = useProModal();
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -63,8 +70,13 @@ const CodePage = () => {
     } catch (error: any) {
       if (error?.response?.status === 403) {
         proModal.onOpen();
+      } else if (error?.response?.status === 429) {
+        toast.error("Our AI system is experiencing high demand. Please try again in a few moments.");
+      } else if (error?.response?.data) {
+        // Use the error message from the server if available
+        toast.error(error.response.data);
       } else {
-        toast.error("Something went wrong.");
+        toast.error("Failed to analyze resume. Please try again.");
       }
     } finally {
       router.refresh();
@@ -73,8 +85,18 @@ const CodePage = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
-      form.setValue('resume', e.target.files[0]);
+      const file = e.target.files[0];
+      const allowedTypes = ['.txt', '.doc', '.docx'];
+      const fileExtension = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
+      
+      if (!allowedTypes.includes(fileExtension)) {
+        toast.error("Please upload a .txt, .doc, or .docx file only");
+        e.target.value = ''; // Reset file input
+        return;
+      }
+
+      setSelectedFile(file);
+      form.setValue('resume', file);
     }
   };
 
@@ -82,7 +104,7 @@ const CodePage = () => {
     <div>
       <Heading
         title="ATS Resume Analysis"
-        description="Upload your resume and job description to get ATS optimization suggestions."
+        description="Upload your resume (.txt, .doc, or .docx files only) and job description to get ATS optimization suggestions."
         icon={FileText}
         iconColor="text-blue-700"
         bgColor="bg-blue-700/10"
@@ -112,7 +134,7 @@ const CodePage = () => {
               <div className="col-span-12 lg:col-span-10">
                 <Input
                   type="file"
-                  accept=".pdf,.doc,.docx"
+                  accept=".txt,.doc,.docx"
                   onChange={handleFileChange}
                   disabled={isLoading}
                 />
@@ -186,4 +208,4 @@ const CodePage = () => {
    );
 }
  
-export default CodePage;
+export default ResumePage;

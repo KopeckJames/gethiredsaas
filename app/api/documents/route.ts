@@ -1,9 +1,10 @@
-import { getUserId } from "@/lib/auth";
 import { NextResponse } from "next/server";
-import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "openai";
-
+import { Configuration, OpenAIApi } from "openai";
+import { getUser } from "@/lib/auth";
 import { checkSubscription } from "@/lib/subscription";
 import { incrementApiLimit, checkApiLimit } from "@/lib/api-limit";
+
+export const dynamic = 'force-dynamic';
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -11,20 +12,15 @@ const configuration = new Configuration({
 
 const openai = new OpenAIApi(configuration);
 
-const instructionMessage: ChatCompletionRequestMessage = {
-  role: "system",
-  content: "You are a code generator. You must answer only in markdown code snippets. Use code comments for explanations."
-};
-
 export async function POST(
   req: Request
 ) {
   try {
-    const userId = await getUserId();
+    const user = await getUser();
     const body = await req.json();
     const { messages  } = body;
 
-    if (!userId) {
+    if (!user?.id) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
@@ -45,7 +41,7 @@ export async function POST(
 
     const response = await openai.createChatCompletion({
       model: "gpt-3.5-turbo",
-      messages: [instructionMessage, ...messages]
+      messages
     });
 
     if (!isPro) {
@@ -54,7 +50,7 @@ export async function POST(
 
     return NextResponse.json(response.data.choices[0].message);
   } catch (error) {
-    console.log('[CODE_ERROR]', error);
+    console.log('[CONVERSATION_ERROR]', error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 };

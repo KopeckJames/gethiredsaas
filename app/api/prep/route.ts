@@ -1,9 +1,10 @@
-import { getUserId } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "openai";
-
+import { getUser } from "@/lib/auth";
 import { checkSubscription } from "@/lib/subscription";
 import { incrementApiLimit, checkApiLimit } from "@/lib/api-limit";
+
+export const dynamic = 'force-dynamic';
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -20,11 +21,11 @@ export async function POST(
   req: Request
 ) {
   try {
-    const userId = await getUserId();
+    const user = await getUser();
     const body = await req.json();
     const { messages  } = body;
 
-    if (!userId) {
+    if (!user?.id) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 

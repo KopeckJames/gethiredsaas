@@ -1,5 +1,5 @@
 import Replicate from "replicate";
-import { auth } from "@clerk/nextjs";
+import { getUserId } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 import { incrementApiLimit, checkApiLimit } from "@/lib/api-limit";
@@ -13,7 +13,7 @@ export async function POST(
   req: Request
 ) {
   try {
-    const { userId } = auth();
+    const userId = await getUserId();
     const body = await req.json();
     const { prompt  } = body;
 

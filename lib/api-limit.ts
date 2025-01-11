@@ -1,41 +1,45 @@
-import { auth } from "@clerk/nextjs";
-
-import prismadb from "@/lib/prismadb";
+import supabase from "@/lib/supabase";
 import { MAX_FREE_COUNTS } from "@/constants";
 
 export const incrementApiLimit = async () => {
-  const { userId } = auth();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!userId) {
+  if (!user?.id) {
     return;
   }
 
-  const userApiLimit = await prismadb.userApiLimit.findUnique({
-    where: { userId: userId },
-  });
+  const { data: userApiLimit } = await supabase
+    .from('user_api_limits')
+    .select()
+    .eq('user_id', user.id)
+    .single();
 
   if (userApiLimit) {
-    await prismadb.userApiLimit.update({
-      where: { userId: userId },
-      data: { count: userApiLimit.count + 1 },
-    });
+    await supabase
+      .from('user_api_limits')
+      .update({ count: userApiLimit.count + 1 })
+      .eq('user_id', user.id);
   } else {
-    await prismadb.userApiLimit.create({
-      data: { userId: userId, count: 1 },
-    });
+    await supabase
+      .from('user_api_limits')
+      .insert([
+        { user_id: user.id, count: 1 }
+      ]);
   }
 };
 
 export const checkApiLimit = async () => {
-  const { userId } = auth();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!userId) {
+  if (!user?.id) {
     return false;
   }
 
-  const userApiLimit = await prismadb.userApiLimit.findUnique({
-    where: { userId: userId },
-  });
+  const { data: userApiLimit } = await supabase
+    .from('user_api_limits')
+    .select()
+    .eq('user_id', user.id)
+    .single();
 
   if (!userApiLimit || userApiLimit.count < MAX_FREE_COUNTS) {
     return true;
@@ -45,17 +49,17 @@ export const checkApiLimit = async () => {
 };
 
 export const getApiLimitCount = async () => {
-  const { userId } = auth();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!userId) {
+  if (!user?.id) {
     return 0;
   }
 
-  const userApiLimit = await prismadb.userApiLimit.findUnique({
-    where: {
-      userId
-    }
-  });
+  const { data: userApiLimit } = await supabase
+    .from('user_api_limits')
+    .select()
+    .eq('user_id', user.id)
+    .single();
 
   if (!userApiLimit) {
     return 0;

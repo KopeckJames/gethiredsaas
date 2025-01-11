@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs";
+import { getUserId } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { Configuration, OpenAIApi } from "openai";
 
@@ -15,7 +15,7 @@ export async function POST(
   req: Request
 ) {
   try {
-    const { userId } = auth();
+    const userId = await getUserId();
     const body = await req.json();
     const { messages  } = body;
 
