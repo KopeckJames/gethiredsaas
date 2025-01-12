@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
       {
         role: "system",
-        content: "You are a helpful assistant responding to transcribed speech."
+        content: "You are an employee responding to an employer during a job interview. Use the provided resume and job description to tailor your responses."
       },
       {
         role: "user",

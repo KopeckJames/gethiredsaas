@@ -5,6 +5,7 @@ import { useEffect, useState, useRef } from "react";
 
 const TranscriptionPage = () => {
   const [transcription, setTranscription] = useState("");
+  const [chatResponse, setChatResponse] = useState("");
   const [listening, setListening] = useState(false);
   const [error, setError] = useState<string>("");
   const [resume, setResume] = useState<string>("");
@@ -86,13 +87,8 @@ const TranscriptionPage = () => {
             const data = await response.json();
             if (data.text) {
               setTranscription((prev) => prev + "\nYou: " + data.text);
-              try {
-                const chatResponse = await getChatGPTResponse(data.text);
-                setTranscription((prev) => prev + "\nAI: " + chatResponse);
-              } catch (error) {
-                console.error("ChatGPT error:", error);
-                setTranscription((prev) => prev + "\nError getting AI response.");
-              }
+              const chatResponse = await getChatGPTResponse(data.text);
+              setChatResponse(chatResponse);
             }
             
             // Clear chunks for next recording
@@ -217,11 +213,24 @@ const TranscriptionPage = () => {
       >
         {listening ? "Stop Listening" : "Start Listening"}
       </button>
-      <textarea
-        className="w-full h-64 p-2 border border-gray-300 rounded"
-        value={transcription}
-        readOnly
-      />
+      <div className="flex space-x-4">
+        <div className="w-1/2">
+          <h2 className="text-xl font-semibold mb-2">Transcription</h2>
+          <textarea
+            className="w-full h-64 p-2 border border-gray-300 rounded"
+            value={transcription}
+            readOnly
+          />
+        </div>
+        <div className="w-1/2">
+          <h2 className="text-xl font-semibold mb-2">AI Response</h2>
+          <textarea
+            className="w-full h-64 p-2 border border-gray-300 rounded"
+            value={chatResponse}
+            readOnly
+          />
+        </div>
+      </div>
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700">Upload Resume</label>
         <input
