@@ -1,8 +1,7 @@
 import { MobileSidebar } from "@/components/mobile-sidebar";
 import { UserMenu } from "@/components/user-menu";
 import { getApiLimitCount } from "@/lib/api-limit";
-import Link from "next/link";
-import { Microphone } from "@/components/Microphone";
+
 
 const Navbar = async () => {
   const apiLimitCount = await getApiLimitCount();

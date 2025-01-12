@@ -34,32 +34,7 @@ export const LandingContent = () => {
     <div className="px-10 pb-20">
       <h2 className="text-center text-4xl text-white font-extrabold mb-10">Features</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-10">
-        <Card className="bg-[#192339] border-none text-white">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-x-2">
-              <div>
-                <p className="text-lg">ATS Resume Analysis</p>
-                <p className="text-zinc-400 text-sm">Optimize your resume for ATS systems.</p>
-              </div>
-            </CardTitle>
-            <CardContent className="pt-4 px-0">
-              <p>Use our ATS Resume Analysis tool to ensure your resume passes through Applicant Tracking Systems with ease.</p>
-            </CardContent>
-          </CardHeader>
-        </Card>
-        <Card className="bg-[#192339] border-none text-white">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-x-2">
-              <div>
-                <p className="text-lg">Transcription</p>
-                <p className="text-zinc-400 text-sm">Convert speech to text effortlessly.</p>
-              </div>
-            </CardTitle>
-            <CardContent className="pt-4 px-0">
-              <p>Our Transcription feature allows you to convert speech to text quickly and accurately.</p>
-            </CardContent>
-          </CardHeader>
-        </Card>
+        
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {testimonials.map((item) => (

@@ -7,8 +7,8 @@ import { Code, ImageIcon, LayoutDashboard, MessageSquare, Music, Settings, Video
 import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
-import { FreeCounter } from "@/components/free-counter";
-import { Microphone } from "@/components/Microphone";
+
+
 
 const poppins = Montserrat ({ weight: '600', subsets: ['latin'] });
 
@@ -106,11 +106,8 @@ export const Sidebar = ({
           ))}
         </div>
       </div>
-      <Microphone />
-      <FreeCounter
-        apiLimitCount={apiLimitCount} 
-        isPro={isPro}
-      />
+      
+      
     </div>
   );
 };
