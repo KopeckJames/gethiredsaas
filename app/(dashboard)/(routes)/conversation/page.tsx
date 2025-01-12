@@ -1,140 +1,148 @@
 "use client";
 
-import * as z from "zod";
-import axios from "axios";
-import { MessageSquare } from "lucide-react";
-import { useForm } from "react-hook-form";
 import { useState } from "react";
-import { toast } from "react-hot-toast";
+import { Send } from "lucide-react"; // shadcn uses lucide-react for icons
 import { useRouter } from "next/navigation";
-import { ChatCompletionRequestMessage } from "openai";
+import { toast } from "react-hot-toast";
 
-import { BotAvatar } from "@/components/bot-avatar";
-import { Heading } from "@/components/heading";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
-import { cn } from "@/lib/utils";
-import { Loader } from "@/components/loader";
-import { UserAvatar } from "@/components/user-avatar";
-import { Empty } from "@/components/ui/empty";
-import { useProModal } from "@/hooks/use-pro-modal";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import ScrollArea from "../../../../components/ui/scroll-area";
 
-import { formSchema } from "./constants";
+type Message = {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+};
 
 const ConversationPage = () => {
   const router = useRouter();
-  const proModal = useProModal();
-  const [messages, setMessages] = useState<ChatCompletionRequestMessage[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      prompt: ""
-    }
-  });
-
-  const isLoading = form.formState.isSubmitting;
-  
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (message: string) => {
     try {
-      const userMessage: ChatCompletionRequestMessage = { role: "user", content: values.prompt };
-      const newMessages = [...messages, userMessage];
+      setIsLoading(true);
+
+      const newMessage: Message = {
+        role: 'user',
+        content: message,
+      };
       
-      const response = await axios.post('/api/conversation', { messages: newMessages });
-      setMessages((current) => [...current, userMessage, response.data]);
-      
-      form.reset();
-    } catch (error: any) {
-      if (error?.response?.status === 403) {
-        proModal.onOpen();
-      } else {
-        toast.error("Something went wrong.");
+      const newMessages = [...messages, newMessage];
+      setMessages(newMessages);
+
+      const response = await fetch("/api/conversation", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: newMessages,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Something went wrong");
       }
-    } finally {
+
+      const data = await response.json();
+
+      setMessages(current => [...current, {
+        role: 'assistant',
+        content: data.content,
+      }]);
+
       router.refresh();
+    } catch (error) {
+      toast.error("Something went wrong");
+    } finally {
+      setIsLoading(false);
     }
-  }
+  };
 
-  return ( 
-    <div>
-      <Heading
-        title="Conversation"
-        description="Our most advanced conversation model."
-        icon={MessageSquare}
-        iconColor="text-violet-500"
-        bgColor="bg-violet-500/10"
-      />
-      <div className="px-4 lg:px-8">
-        <div>
-          <Form {...form}>
-            <form 
-              onSubmit={form.handleSubmit(onSubmit)} 
-              className="
-                rounded-lg 
-                border 
-                w-full 
-                p-4 
-                px-3 
-                md:px-6 
-                focus-within:shadow-sm
-                grid
-                grid-cols-12
-                gap-2
-              "
-            >
-              <FormField
-                name="prompt"
-                render={({ field }) => (
-                  <FormItem className="col-span-12 lg:col-span-10">
-                    <FormControl className="m-0 p-0">
-                      <Input
-                        className="border-0 outline-none focus-visible:ring-0 focus-visible:ring-transparent"
-                        disabled={isLoading} 
-                        placeholder="How do I calculate the radius of a circle?" 
-                        {...field}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <Button className="col-span-12 lg:col-span-2 w-full" type="submit" disabled={isLoading} size="icon">
-                Generate
-              </Button>
-            </form>
-          </Form>
-        </div>
-        <div className="space-y-4 mt-4">
-          {isLoading && (
-            <div className="p-8 rounded-lg w-full flex items-center justify-center bg-muted">
-              <Loader />
-            </div>
-          )}
-          {messages.length === 0 && !isLoading && (
-            <Empty label="No conversation started." />
-          )}
-          <div className="flex flex-col-reverse gap-y-4">
-            {messages.map((message) => (
-              <div 
-                key={message.content} 
-                className={cn(
-                  "p-8 w-full flex items-start gap-x-8 rounded-lg",
-                  message.role === "user" ? "bg-white border border-black/10" : "bg-muted",
-                )}
-              >
-                {message.role === "user" ? <UserAvatar /> : <BotAvatar />}
-                <p className="text-sm">
-                  {message.content}
-                </p>
+  return (
+    <div className="flex flex-col h-[calc(100vh-2rem)] max-w-4xl mx-auto p-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Conversation</CardTitle>
+          <CardDescription>
+            Start a conversation with our most advanced AI model.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-[60vh] pr-4">
+            {messages.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-muted-foreground">
+                No conversation started. Type a message to begin.
               </div>
-            ))}
+            ) : (
+              <div className="flex flex-col gap-y-4">
+                {messages.map((message, index) => (
+                  <div 
+                    key={index}
+                    className={`flex gap-x-4 rounded-lg p-4 ${
+                      message.role === 'user' 
+                        ? 'ml-auto bg-primary text-primary-foreground' 
+                        : 'bg-muted'
+                    }`}
+                  >
+                    <Avatar>
+                      <AvatarImage 
+                        src={message.role === 'user' ? '/user-avatar.png' : '/bot-avatar.png'} 
+                      />
+                      <AvatarFallback>
+                        {message.role === 'user' ? 'U' : 'AI'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <p className="text-sm leading-6">{message.content}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+          <div className="mt-4">
+            <Form
+              isLoading={isLoading}
+              onSubmit={onSubmit}
+            />
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
-   );
-}
- 
-export default ConversationPage;
+  );
+};
 
+interface FormProps {
+  isLoading: boolean;
+  onSubmit: (message: string) => void;
+}
+
+const Form = ({ isLoading, onSubmit }: FormProps) => {
+  const [input, setInput] = useState('');
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+    onSubmit(input);
+    setInput('');
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="flex gap-x-2">
+      <Input
+        disabled={isLoading}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="Type a message"
+        value={input}
+        className="flex-1"
+      />
+      <Button disabled={isLoading} type="submit" size="icon">
+        <Send className="h-4 w-4" />
+      </Button>
+    </form>
+  );
+};
+
+export default ConversationPage;

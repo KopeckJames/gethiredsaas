@@ -1,12 +1,10 @@
 import { getUserId } from "@/lib/auth";
 import { NextResponse } from "next/server";
-import { Configuration, OpenAIApi } from "openai";
+import OpenAI from "openai";
 
-const configuration = new Configuration({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-
-const openai = new OpenAIApi(configuration);
 
 export async function POST(
   req: Request
@@ -20,7 +18,7 @@ export async function POST(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    if (!configuration.apiKey) {
+    if (!process.env.OPENAI_API_KEY) {
       return new NextResponse("OpenAI API Key not configured.", { status: 500 });
     }
 
@@ -36,15 +34,15 @@ export async function POST(
       return new NextResponse("Resolution is required", { status: 400 });
     }
 
-    const response = await openai.createImage({
+    const response = await openai.images.generate({
       prompt,
       n: parseInt(amount, 10),
-      size: resolution,
+      size: resolution as "256x256" | "512x512" | "1024x1024",
     });
 
-    return NextResponse.json(response.data.data);
+    return NextResponse.json(response.data);
   } catch (error) {
     console.log('[IMAGE_ERROR]', error);
     return new NextResponse("Internal Error", { status: 500 });
   }
-};
+}

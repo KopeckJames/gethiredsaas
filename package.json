@@ -38,7 +38,7 @@
     "lucide-react": "^0.259.0",
     "next": "13.4.9",
     "next-themes": "^0.2.1",
-    "openai": "^3.3.0",
+    "openai": "^4.0.0",
     "postcss": "8.4.25",
     "progress": "^2.0.3",
     "react": "18.2.0",
@@ -58,5 +58,8 @@
     "utf-8-validate": "^6.0.5",
     "zod": "^3.21.4",
     "zustand": "^4.3.9"
+  },
+  "devDependencies": {
+    "@shadcn/ui": "^0.0.4"
   }
 }
