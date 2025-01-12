@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-// Import other necessary modules
+import { Sidebar } from "@/components/sidebar";
 
 const TranscriptionPage = () => {
   const [transcription, setTranscription] = useState("");
@@ -200,53 +200,56 @@ const TranscriptionPage = () => {
   };
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Real-time Transcription</h1>
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
+    <div className="flex h-screen">
+      <Sidebar apiLimitCount={0} isPro={false} />
+      <div className="p-4 flex-1">
+        <h1 className="text-2xl font-bold mb-4">Real-time Transcription</h1>
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {error}
+          </div>
+        )}
+        <button
+          onClick={toggleListening}
+          className={`p-2 mb-4 ${listening ? "bg-red-500" : "bg-green-500"} text-white rounded`}
+        >
+          {listening ? "Stop Listening" : "Start Listening"}
+        </button>
+        <div className="flex space-x-4">
+          <div className="w-1/2">
+            <h2 className="text-xl font-semibold mb-2">Transcription</h2>
+            <textarea
+              className="w-full h-64 p-2 border border-gray-300 rounded"
+              value={transcription}
+              readOnly
+            />
+          </div>
+          <div className="w-1/2">
+            <h2 className="text-xl font-semibold mb-2">AI Response</h2>
+            <textarea
+              className="w-full h-64 p-2 border border-gray-300 rounded"
+              value={chatResponse}
+              readOnly
+            />
+          </div>
         </div>
-      )}
-      <button
-        onClick={toggleListening}
-        className={`p-2 mb-4 ${listening ? "bg-red-500" : "bg-green-500"} text-white rounded`}
-      >
-        {listening ? "Stop Listening" : "Start Listening"}
-      </button>
-      <div className="flex space-x-4">
-        <div className="w-1/2">
-          <h2 className="text-xl font-semibold mb-2">Transcription</h2>
-          <textarea
-            className="w-full h-64 p-2 border border-gray-300 rounded"
-            value={transcription}
-            readOnly
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700">Upload Resume</label>
+          <input
+            type="file"
+            accept=".txt,.pdf,.docx"
+            onChange={handleResumeUpload}
+            className="mt-1 block w-full"
           />
         </div>
-        <div className="w-1/2">
-          <h2 className="text-xl font-semibold mb-2">AI Response</h2>
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700">Job Description</label>
           <textarea
-            className="w-full h-64 p-2 border border-gray-300 rounded"
-            value={chatResponse}
-            readOnly
+            className="w-full h-32 p-2 border border-gray-300 rounded"
+            value={jobDescription}
+            onChange={(e) => setJobDescription(e.target.value)}
           />
         </div>
-      </div>
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700">Upload Resume</label>
-        <input
-          type="file"
-          accept=".txt,.pdf,.docx"
-          onChange={handleResumeUpload}
-          className="mt-1 block w-full"
-        />
-      </div>
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700">Job Description</label>
-        <textarea
-          className="w-full h-32 p-2 border border-gray-300 rounded"
-          value={jobDescription}
-          onChange={(e) => setJobDescription(e.target.value)}
-        />
       </div>
     </div>
   );

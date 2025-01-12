@@ -1,4 +1,4 @@
-import { Code, ImageIcon, MessageSquare, Music, VideoIcon } from "lucide-react";
+import { Code, FileText, ImageIcon, MessageSquare, Mic, Music, VideoIcon } from "lucide-react";
 
 export const MAX_FREE_COUNTS = 5;
 
@@ -36,6 +36,20 @@ export const tools = [
     icon: Code,
     color: "text-green-700",
     bgColor: "bg-green-700/10",
+    href: '/code',
+  },
+  {
+    label: 'Transcription',
+    icon: Mic,
+    color: "text-red-700",
+    bgColor: "bg-red-700/10",
+    href: '/code',
+  },
+  {
+    label: 'ATS Resume Analysis',
+    icon: FileText,
+    color: "text-blue-700",
+    bgColor: "bg-blue-700/10",
     href: '/code',
   },
 ];

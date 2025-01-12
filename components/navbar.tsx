@@ -11,10 +11,7 @@ const Navbar = async () => {
   return (
     <div className="flex items-center p-4">
       <MobileSidebar isPro={isPro} apiLimitCount={apiLimitCount} />
-      <Link href="/transcription" className="mr-4">
-        Transcription
-      </Link>
-      <Microphone />
+      
       <div className="flex w-full justify-end">
         <UserMenu />
       </div>
