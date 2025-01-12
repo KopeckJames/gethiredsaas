@@ -8,24 +8,40 @@ const openai = new OpenAI({
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { text } = body;
+    const { text, resume, jobDescription } = body;
 
     if (!text) {
       return new NextResponse("Text is required", { status: 400 });
     }
 
+    const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
+      {
+        role: "system",
+        content: "You are a helpful assistant responding to transcribed speech."
+      },
+      {
+        role: "user",
+        content: text
+      }
+    ];
+
+    if (resume) {
+      messages.unshift({
+        role: "system",
+        content: `The user has provided a resume: ${resume}`
+      });
+    }
+
+    if (jobDescription) {
+      messages.unshift({
+        role: "system",
+        content: `The user is applying for a job with the following description: ${jobDescription}`
+      });
+    }
+
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "system",
-          content: "You are a helpful assistant responding to transcribed speech."
-        },
-        {
-          role: "user",
-          content: text
-        }
-      ],
+      messages: messages,
     });
 
     return NextResponse.json({ 

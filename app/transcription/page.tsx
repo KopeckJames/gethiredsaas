@@ -7,6 +7,8 @@ const TranscriptionPage = () => {
   const [transcription, setTranscription] = useState("");
   const [listening, setListening] = useState(false);
   const [error, setError] = useState<string>("");
+  const [resume, setResume] = useState<string>("");
+  const [jobDescription, setJobDescription] = useState<string>("");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
@@ -154,6 +156,17 @@ const TranscriptionPage = () => {
     };
   }, [listening]); // Add listening to dependency array
 
+  const handleResumeUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setResume(reader.result as string);
+      };
+      reader.readAsText(file);
+    }
+  };
+
   const getChatGPTResponse = async (text: string): Promise<string> => {
     if (!text.trim()) return "";
     
@@ -163,7 +176,7 @@ const TranscriptionPage = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text, resume, jobDescription }),
       });
       
       if (!response.ok) {
@@ -209,6 +222,23 @@ const TranscriptionPage = () => {
         value={transcription}
         readOnly
       />
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700">Upload Resume</label>
+        <input
+          type="file"
+          accept=".txt,.pdf,.docx"
+          onChange={handleResumeUpload}
+          className="mt-1 block w-full"
+        />
+      </div>
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700">Job Description</label>
+        <textarea
+          className="w-full h-32 p-2 border border-gray-300 rounded"
+          value={jobDescription}
+          onChange={(e) => setJobDescription(e.target.value)}
+        />
+      </div>
     </div>
   );
 };
