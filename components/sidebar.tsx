@@ -3,11 +3,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Montserrat } from 'next/font/google'
-import { Code, ImageIcon, LayoutDashboard, MessageSquare, Music, Settings, VideoIcon, FileText } from "lucide-react";
+import { Code, ImageIcon, LayoutDashboard, MessageSquare, Music, Settings, VideoIcon, FileText, Mic } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
-import { FreeCounter } from "@/components/free-counter";
+
+
 
 const poppins = Montserrat ({ weight: '600', subsets: ['latin'] });
 
@@ -55,6 +56,12 @@ const routes = [
     href: '/code',
   },
   {
+    label: 'Transcription',
+    icon: Mic,
+    color: "text-red-500",
+    href: '/transcription',
+  },
+  {
     label: 'Settings',
     icon: Settings,
     href: '/settings',
@@ -99,10 +106,8 @@ export const Sidebar = ({
           ))}
         </div>
       </div>
-      <FreeCounter 
-        apiLimitCount={apiLimitCount} 
-        isPro={isPro}
-      />
+      
+      
     </div>
   );
 };

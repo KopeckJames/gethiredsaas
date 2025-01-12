@@ -1,8 +1,6 @@
 import Replicate from "replicate";
 import { NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
-import { incrementApiLimit, checkApiLimit } from "@/lib/api-limit";
-import { checkSubscription } from "@/lib/subscription";
 
 export const dynamic = 'force-dynamic';
 
@@ -16,7 +14,7 @@ export async function POST(
   try {
     const user = await getUser();
     const body = await req.json();
-    const { prompt  } = body;
+    const { prompt } = body;
 
     if (!user?.id) {
       return new NextResponse("Unauthorized", { status: 401 });
@@ -24,13 +22,6 @@ export async function POST(
 
     if (!prompt) {
       return new NextResponse("Prompt is required", { status: 400 });
-    }
-
-    const freeTrial = await checkApiLimit();
-    const isPro = await checkSubscription();
-
-    if (!freeTrial && !isPro) {
-      return new NextResponse("Free trial has expired. Please upgrade to pro.", { status: 403 });
     }
 
     const response = await replicate.run(
@@ -41,10 +32,6 @@ export async function POST(
         }
       }
     );
-
-    if (!isPro) {
-      await incrementApiLimit();
-    }
 
     return NextResponse.json(response);
   } catch (error) {

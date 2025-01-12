@@ -1,7 +1,6 @@
 import Replicate from "replicate";
 import { NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
-import { checkSubscription } from "@/lib/subscription";
 import { incrementApiLimit, checkApiLimit } from "@/lib/api-limit";
 
 export const dynamic = 'force-dynamic';
@@ -27,9 +26,8 @@ export async function POST(
     }
 
     const freeTrial = await checkApiLimit();
-    const isPro = await checkSubscription();
 
-    if (!freeTrial && !isPro) {
+    if (!freeTrial) {
       return new NextResponse("Free trial has expired. Please upgrade to pro.", { status: 403 });
     }
 
@@ -42,9 +40,6 @@ export async function POST(
       }
     );
 
-    if (!isPro) {
-      await incrementApiLimit();
-    }
 
     return NextResponse.json(response);
   } catch (error) {

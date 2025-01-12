@@ -1,6 +1,5 @@
 import Navbar from "@/components/navbar";
 import { Sidebar } from "@/components/sidebar";
-import { checkSubscription } from "@/lib/subscription";
 import { getApiLimitCount } from "@/lib/api-limit";
 
 const DashboardLayout = async ({
@@ -9,7 +8,7 @@ const DashboardLayout = async ({
   children: React.ReactNode
 }) => {
   const apiLimitCount = await getApiLimitCount();
-  const isPro = await checkSubscription();
+  const isPro = false;
 
   return ( 
     <div className="h-full relative">
@@ -23,5 +22,5 @@ const DashboardLayout = async ({
     </div>
    );
 }
- 
+
 export default DashboardLayout;
