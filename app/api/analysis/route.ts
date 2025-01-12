@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { Configuration, OpenAIApi } from "openai";
 import { AxiosError } from "axios";
 import { getUser } from "@/lib/auth";
-import { checkSubscription } from "@/lib/subscription";
+
 import { incrementApiLimit, checkApiLimit } from "@/lib/api-limit";
 
 export const dynamic = 'force-dynamic';
@@ -136,12 +136,9 @@ export async function POST(req: Request) {
     }
 
     const freeTrial = await checkApiLimit();
-    const isPro = await checkSubscription();
+    
 
-    if (!freeTrial && !isPro) {
-      return new NextResponse("Free trial has expired. Please upgrade to pro.", { status: 403 });
-    }
-
+   
     // Read the resume file content
     let resumeText: string;
     try {
@@ -166,10 +163,7 @@ export async function POST(req: Request) {
       // Analyze the resume with retry logic
       const analysis = await analyzeResumeWithRetry(resumeText, jobDescription);
 
-      if (!isPro) {
-        await incrementApiLimit();
-      }
-
+      
       return NextResponse.json(analysis);
     } catch (error) {
       console.error('[ANALYSIS_ERROR]', error);
